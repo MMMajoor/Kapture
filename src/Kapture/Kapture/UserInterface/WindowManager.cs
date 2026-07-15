@@ -32,6 +32,7 @@ namespace Kapture
             // add event listeners
             KapturePlugin.PluginInterface.UiBuilder.Draw += this.Draw;
             KapturePlugin.PluginInterface.UiBuilder.OpenConfigUi += this.OpenConfigUi;
+            KapturePlugin.PluginInterface.UiBuilder.OpenMainUi += this.OpenMainUi;
         }
 
         /// <summary>
@@ -74,6 +75,7 @@ namespace Kapture
         {
             KapturePlugin.PluginInterface.UiBuilder.Draw -= this.Draw;
             KapturePlugin.PluginInterface.UiBuilder.OpenConfigUi -= this.OpenConfigUi;
+            KapturePlugin.PluginInterface.UiBuilder.OpenMainUi -= this.OpenMainUi;
             this.LootWindowSystem.RemoveAllWindows();
             this.RollWindowSystem.RemoveAllWindows();
             this.ConfigWindowSystem.RemoveAllWindows();
@@ -100,6 +102,16 @@ namespace Kapture
         private void OpenConfigUi()
         {
             this.SettingsWindow!.IsOpen ^= true;
+        }
+
+        // Registered as UiBuilder.OpenMainUi — fired when the user clicks the plugin's
+        // "main" entry in the installer. Toggles the loot overlay, matching the /loot
+        // command, so the plugin has a primary launch action (not just the config gear).
+        private void OpenMainUi()
+        {
+            this.Plugin.Configuration.ShowLootOverlay = !this.Plugin.Configuration.ShowLootOverlay;
+            this.LootWindow?.Toggle();
+            this.Plugin.SaveConfig();
         }
     }
 }
