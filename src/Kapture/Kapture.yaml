@@ -1,6 +1,6 @@
-﻿name: Kapture
+name: Kapture
 author: kalilistic
-punchline: Track your loot. 
+punchline: Track your loot.
 description: |-
     Kapture is a loot tracker to capture drops, obtained items, rolls, and more.
     Use the roll monitor to see who you are waiting on to roll.
@@ -8,4 +8,10 @@ tags:
     - loot
     - track
     - roll
-repo_url: https://github.com/kalilistic/Dalamud.Kapture
+repo_url: https://github.com/MKhayle/Kapture
+icon_url: https://raw.githubusercontent.com/MKhayle/Kapture/master/images/icon.png
+changelog: |-
+    2.1.0.0 — Updated for Dalamud API 15 (.NET 10). Migrated ImGui to
+    Dalamud.Bindings.ImGui, moved local-player reads to IObjectTable, adopted the
+    new IHandleableChatMessage delegate, and removed the defunct HTTP export and
+    DiscordBridge integrations.

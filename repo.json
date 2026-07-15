@@ -1,0 +1,18 @@
+[
+  {
+    "Author": "kalilistic",
+    "Name": "Kapture",
+    "InternalName": "Kapture",
+    "AssemblyVersion": "2.1.0.0",
+    "Description": "Kapture is a loot tracker to capture drops, obtained items, rolls, and more.\nUse the roll monitor to see who you are waiting on to roll.",
+    "ApplicableVersion": "any",
+    "RepoUrl": "https://github.com/MKhayle/Kapture",
+    "Tags": ["loot", "track", "roll"],
+    "DalamudApiLevel": 15,
+    "IconUrl": "https://raw.githubusercontent.com/MKhayle/Kapture/master/images/icon.png",
+    "Punchline": "Track your loot.",
+    "DownloadLinkInstall": "https://github.com/MKhayle/Kapture/releases/latest/download/latest.zip",
+    "DownloadLinkUpdate": "https://github.com/MKhayle/Kapture/releases/latest/download/latest.zip",
+    "DownloadLinkTesting": "https://github.com/MKhayle/Kapture/releases/latest/download/latest.zip"
+  }
+]

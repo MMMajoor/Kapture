@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFramework>net8.0-windows</TargetFramework>
+		<TargetFramework>net10.0-windows</TargetFramework>
 		<Platforms>x64</Platforms>
 		<LangVersion>latest</LangVersion>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -15,9 +15,9 @@
 		<RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
 	</PropertyGroup>
 	<ItemGroup>
-		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.10.0" />
-		<PackageReference Include="xunit" Version="2.8.1" />
-		<PackageReference Include="xunit.runner.visualstudio" Version="2.8.1">
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+		<PackageReference Include="xunit" Version="2.9.2" />
+		<PackageReference Include="xunit.runner.visualstudio" Version="2.8.2">
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 			<PrivateAssets>all</PrivateAssets>
 		</PackageReference>
@@ -35,4 +35,17 @@
 			<Private>False</Private>
 		</Reference>
 	</ItemGroup>
+	<!-- The test host must load Kapture.dll for discovery, which transitively needs
+	     Dalamud + FFXIVClientStructs + Lumina at runtime. Those are referenced
+	     Private=False (not copied), so stage the dev-lib assemblies into the test
+	     output dir; otherwise vstest reports "No test is available". -->
+	<Target Name="CopyDalamudLibsForTestHost" AfterTargets="Build">
+		<ItemGroup>
+			<_DalamudLibs Include="$(DalamudLibPath)*.dll" />
+		</ItemGroup>
+		<Copy SourceFiles="@(_DalamudLibs)"
+		      DestinationFolder="$(OutDir)"
+		      SkipUnchangedFiles="true"
+		      OverwriteReadOnlyFiles="true" />
+	</Target>
 </Project>

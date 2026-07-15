@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 
 using CheapLoc;
+using Dalamud.Game.Chat;
 using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Game.ClientState.Party;
 using Dalamud.Game.Command;
@@ -90,6 +91,12 @@ namespace Kapture
         public static IClientState ClientState { get; private set; } = null!;
 
         /// <summary>
+        /// Gets object table (source of the local player in API 15+).
+        /// </summary>
+        [PluginService]
+        public static IObjectTable ObjectTable { get; private set; } = null!;
+
+        /// <summary>
         /// Gets chat gui.
         /// </summary>
         [PluginService]
@@ -128,16 +135,6 @@ namespace Kapture
         /// Gets or sets loot PluginLog.
         /// </summary>
         public LootLogger LootLogger { get; set; } = null!;
-
-        /// <summary>
-        /// Gets or sets HTTP service.
-        /// </summary>
-        public LootHTTP LootHTTP { get; set; } = null!;
-
-        /// <summary>
-        /// Gets or sets discord service.
-        /// </summary>
-        public LootDiscord LootDiscord { get; set; } = null!;
 
         /// <summary>
         /// Gets or sets list of item category names.
@@ -221,13 +218,13 @@ namespace Kapture
         /// <inheritdoc />
         public string GetLocalPlayerName()
         {
-            return ClientState.LocalPlayer?.Name.ToString() ?? string.Empty;
+            return ObjectTable.LocalPlayer?.Name.ToString() ?? string.Empty;
         }
 
         /// <inheritdoc />
         public string GetLocalPlayerWorld()
         {
-            return ClientState.LocalPlayer?.HomeWorld.Value.Name.ToString() ?? string.Empty;
+            return ObjectTable.LocalPlayer?.HomeWorld.Value.Name.ToString() ?? string.Empty;
         }
 
         /// <inheritdoc />
@@ -311,8 +308,6 @@ namespace Kapture
             {
                 this.DisposeListeners();
                 this.LootLogger.Dispose();
-                this.LootHTTP.Dispose();
-                this.LootDiscord.Dispose();
                 this.RollMonitor.Dispose();
                 this.RemoveCommands();
                 this.ClearData();
@@ -396,18 +391,6 @@ namespace Kapture
                 this.Configuration.WriteToLogFrequency = 30000;
                 this.SaveConfig();
             }
-
-            if (this.Configuration.SendHTTPFrequency == 0)
-            {
-                this.Configuration.SendHTTPFrequency = 5000;
-                this.SaveConfig();
-            }
-
-            if (this.Configuration.SendDiscordFrequency == 0)
-            {
-                this.Configuration.SendDiscordFrequency = 5000;
-                this.SaveConfig();
-            }
         }
 
         private void LoadServices()
@@ -435,8 +418,6 @@ namespace Kapture
             };
 
             this.LootLogger = new LootLogger(this);
-            this.LootHTTP = new LootHTTP(this);
-            this.LootDiscord = new LootDiscord(this);
         }
 
         private void LoadUI()
@@ -482,7 +463,7 @@ namespace Kapture
             ClientState.TerritoryChanged -= this.TerritoryChanged;
         }
 
-        private void TerritoryChanged(ushort territoryType)
+        private void TerritoryChanged(uint territoryType)
         {
             try
             {
@@ -500,9 +481,15 @@ namespace Kapture
             }
         }
 
-        private void ChatMessageHandled(
-            XivChatType type, int timestamp, ref SeString sender, ref SeString message, ref bool isHandled)
+        private void ChatMessageHandled(IHandleableChatMessage chatMessage)
         {
+            // Dalamud API 15 replaced the old (type, timestamp, ref sender, ref message,
+            // ref isHandled) delegate with a single IHandleableChatMessage. Kapture only
+            // observes loot lines (it never suppresses messages), so we read Type + Message
+            // and ignore sender/timestamp/handled.
+            var type = chatMessage.LogKind;
+            var message = chatMessage.Message;
+
             // check if enabled
             if (!this.Configuration.Enabled) return;
 
@@ -610,8 +597,6 @@ namespace Kapture
             if (this.LootProcessor.IsEnabledEvent(lootEvent))
             {
                 if (this.Configuration.LoggingEnabled) this.LootLogger.LogLoot(lootEvent);
-                if (this.Configuration.SendHTTPEnabled) this.LootHTTP.SendToHTTPQueue(lootEvent);
-                if (this.Configuration.SendDiscordEnabled) this.LootDiscord.SendToDiscordQueue(lootEvent);
             }
         }
 

@@ -170,41 +170,6 @@ namespace Kapture
         public bool LoggingEnabled { get; set; }
 
         /// <summary>
-        /// Gets or sets a value indicating whether to send loot to HTTP.
-        /// </summary>
-        public bool SendHTTPEnabled { get; set; }
-
-        /// <summary>
-        /// Gets or sets frequency to send http messages.
-        /// </summary>
-        public int SendHTTPFrequency { get; set; } = 5000;
-
-        /// <summary>
-        /// Gets or sets custom json to send.
-        /// </summary>
-        public string HTTPCustomJSON { get; set;  } = string.Empty;
-
-        /// <summary>
-        /// Gets or sets endpoint.
-        /// </summary>
-        public string HTTPEndpoint { get; set;  } = string.Empty;
-
-        /// <summary>
-        /// Gets or sets timeout for sending HTTP messages.
-        /// </summary>
-        public int SendHTTPRequestTimeout { get; set; } = 60000;
-
-        /// <summary>
-        /// Gets or sets a value indicating whether to send loot to discord.
-        /// </summary>
-        public bool SendDiscordEnabled { get; set; }
-
-        /// <summary>
-        /// Gets or sets frequency to send discord messages.
-        /// </summary>
-        public int SendDiscordFrequency { get; set; } = 5000;
-
-        /// <summary>
         /// Gets or sets a value indicating whether to restrict to local player events.
         /// </summary>
         public bool SelfOnly { get; set; }

@@ -5,5 +5,13 @@
                 OutputPath="$(OutputPath)"
                 AssemblyName="$(AssemblyName)"
                 MakeZip="true"/>
+        <!-- DalamudPackager stages files into $(OutputPath)$(AssemblyName)\, zips them
+             into latest.zip, then deletes the loose copies — including the DLL. Dalamud
+             Dev Plugin Locations need a DLL on disk, so re-extract the zip afterwards
+             into the same staged folder. -->
+        <Unzip Condition="Exists('$(OutputPath)$(AssemblyName)\latest.zip')"
+               SourceFiles="$(OutputPath)$(AssemblyName)\latest.zip"
+               DestinationFolder="$(OutputPath)$(AssemblyName)\"
+               OverwriteReadOnlyFiles="true" />
     </Target>
 </Project>

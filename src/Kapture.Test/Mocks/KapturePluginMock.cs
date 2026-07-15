@@ -101,7 +101,10 @@ namespace Kapture.Test
         /// <inheritdoc />
         public string FormatPlayerName(int nameFormatCode, string playerName)
         {
-            return string.Empty;
+            // Test double: no name-format transformation under test, so return the
+            // name unchanged. (Previously returned string.Empty, which silently wiped
+            // PlayerName and failed every OtherPlayer* assertion.)
+            return playerName;
         }
 
         /// <inheritdoc />

@@ -1,9 +1,9 @@
-<Project Sdk="Dalamud.NET.Sdk/11.0.0">
+<Project Sdk="Dalamud.NET.Sdk/15.0.0">
 	<PropertyGroup>
-		<Version>2.0.0.0</Version>
+		<Version>2.1.0.0</Version>
 		<Title>Kapture</Title>
 		<Authors>kalilistic, maintained by Khayle</Authors>
-		<TargetFramework>net8.0-windows</TargetFramework>
+		<TargetFramework>net10.0-windows</TargetFramework>
 		<Platforms>x64</Platforms>
 		<LangVersion>latest</LangVersion>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -11,8 +11,11 @@
 		<Deterministic>true</Deterministic>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<!-- SDK 15 routes output to bin/x64/Release/ by default; pin the
+		     historical bin/Release/ layout so Dev Plugin Locations keep working. -->
+		<PlatformTarget>x64</PlatformTarget>
 		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-		<AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+		<AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
 		<OutputPath>bin\$(Configuration)\</OutputPath>
 		<DalamudLibPath>$(appdata)\XIVLauncher\addon\Hooks\dev\</DalamudLibPath>
 		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
@@ -54,41 +57,14 @@
 		<None Remove="Kapture\Resource\loc\ru.json" />
 		<None Remove="Kapture\Resource\loc\zh.json" />
 	</ItemGroup>
+	<!-- Dalamud.NET.Sdk 15 auto-references Dalamud, ImGui (Dalamud.Bindings.ImGui),
+	     Lumina, Lumina.Excel, FFXIVClientStructs and Newtonsoft.Json. The old
+	     hand-rolled <Reference> block (including the now-removed ImGui.NET and
+	     ImGuiScene assemblies) is intentionally gone. CheapLoc still ships in the
+	     dev libs but is NOT auto-referenced, so it stays as an explicit reference. -->
 	<ItemGroup>
 		<Reference Include="CheapLoc">
 			<HintPath>$(DalamudLibPath)CheapLoc.dll</HintPath>
-			<Private>False</Private>
-		</Reference>
-		<Reference Include="Dalamud">
-			<HintPath>$(DalamudLibPath)Dalamud.dll</HintPath>
-			<Private>False</Private>
-		</Reference>
-		<Reference Include="FFXIVClientStructs">
-			<HintPath>$(DalamudLibPath)FFXIVClientStructs.dll</HintPath>
-			<Private>False</Private>
-		</Reference>
-		<Reference Include="ImGui.NET">
-			<HintPath>$(DalamudLibPath)ImGui.NET.dll</HintPath>
-			<Private>False</Private>
-		</Reference>
-		<Reference Include="ImGuiScene">
-			<HintPath>$(DalamudLibPath)ImGuiScene.dll</HintPath>
-			<Private>False</Private>
-		</Reference>
-		<Reference Include="Lumina">
-			<HintPath>$(DalamudLibPath)Lumina.dll</HintPath>
-			<Private>False</Private>
-		</Reference>
-		<Reference Include="Lumina.Excel">
-			<HintPath>$(DalamudLibPath)Lumina.Excel.dll</HintPath>
-			<Private>False</Private>
-		</Reference>
-		<Reference Include="ImGui.NET">
-			<HintPath>$(DalamudLibPath)ImGui.NET.dll</HintPath>
-			<Private>False</Private>
-		</Reference>
-		<Reference Include="Newtonsoft.Json">
-			<HintPath>$(DalamudLibPath)Newtonsoft.Json.dll</HintPath>
 			<Private>False</Private>
 		</Reference>
 	</ItemGroup>
@@ -121,4 +97,6 @@
 		<None Remove="Kapture\Resource\translation\zh.json" />
 		<EmbeddedResource Include="Kapture\Resource\translation\zh.json" />
 	</ItemGroup>
+	<!-- Packaging + the dev-plugin zip re-extract live in the project's own
+	     DalamudPackager.targets (its Package target overrides the SDK default). -->
 </Project>

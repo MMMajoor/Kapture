@@ -18,7 +18,7 @@ namespace Kapture.Kapture.Extensions
         /// <param name="value">data manager.</param>
         /// <param name="territoryType">territory type id.</param>
         /// <returns>content id or zero if not in content.</returns>
-        public static uint ContentId(this IDataManager value, ushort territoryType) => GetContentId(value, territoryType);
+        public static uint ContentId(this IDataManager value, uint territoryType) => GetContentId(value, territoryType);
 
         /// <summary>
         /// Get content name.
@@ -26,7 +26,7 @@ namespace Kapture.Kapture.Extensions
         /// <param name="value">data manager.</param>
         /// <param name="territoryType">territory type id.</param>
         /// <returns>content name.</returns>
-        public static string ContentName(this IDataManager value, ushort territoryType)
+        public static string ContentName(this IDataManager value, uint territoryType)
         {
             var contentId = GetContentId(value, territoryType);
             if (contentId == 0)
@@ -43,7 +43,7 @@ namespace Kapture.Kapture.Extensions
         /// <param name="value">data manager.</param>
         /// <param name="territoryType">territory type id.</param>
         /// <returns>indicator whether local player is in content.</returns>
-        public static bool InContent(this IDataManager value, ushort territoryType) => GetContentId(value, territoryType) != 0;
+        public static bool InContent(this IDataManager value, uint territoryType) => GetContentId(value, territoryType) != 0;
 
         /// <summary>
         /// Gets indicator whether current territory is high-end duty content.
@@ -51,7 +51,7 @@ namespace Kapture.Kapture.Extensions
         /// <param name="value">data manager.</param>
         /// <param name="territoryType">territory type id.</param>
         /// <returns>indicator whether local player is in high-end duty content.</returns>
-        public static bool InHighEndDuty(this IDataManager value, ushort territoryType)
+        public static bool InHighEndDuty(this IDataManager value, uint territoryType)
         {
             var contentId = GetContentId(value, territoryType);
             if (contentId == 0)
@@ -179,7 +179,7 @@ namespace Kapture.Kapture.Extensions
             return world?.DataCenter.RowId == 13;
         }
 
-        private static uint GetContentId(IDataManager value, ushort territoryType)
+        private static uint GetContentId(IDataManager value, uint territoryType)
         {
             var cfcs = value.GetExcelSheet<ContentFinderCondition>();
             var cfcResult = cfcs.TryGetFirst(c => c.TerritoryType.RowId == territoryType, out var cfc);

@@ -107,7 +107,7 @@ namespace Kapture
                                     this.plugin.Configuration.ChatNameFormat,
                                     player.Name.ToString()),
                                 RollColor = GetColorByNumber(0),
-                                IsLocalPlayer = player.ObjectId == KapturePlugin.ClientState.LocalPlayer?.EntityId,
+                                IsLocalPlayer = player.ObjectId == KapturePlugin.ObjectTable.LocalPlayer?.EntityId,
                             });
                         }
 
