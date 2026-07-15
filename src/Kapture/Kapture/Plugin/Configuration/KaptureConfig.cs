@@ -202,9 +202,10 @@ namespace Kapture
         public int RollDisplayMode { get; set; }
 
         /// <summary>
-        ///  Gets or sets loot display mode.
+        ///  Gets or sets loot display mode. Defaults to During Content Only (1) so the
+        ///  overlay doesn't pop up outside instances on every reload.
         /// </summary>
-        public int LootDisplayMode { get; set; }
+        public int LootDisplayMode { get; set; } = 1;
 
         /// <summary>
         /// Gets or sets a value indicating whether to enable debug logging to build regex.
