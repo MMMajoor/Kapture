@@ -866,7 +866,7 @@ namespace Kapture
 
             ImGuiComponents.HelpMarker(Loc.Localize(
                 "LogRollsOnly_HelpMarker",
-                "only log items that were rolled for: the Need/Greed rolls plus the winning Obtain. Skips Add/Cast noise and auto-distributed items nobody rolled on (e.g. materia)."));
+                "only log items that were rolled for (Need/Greed rolls); the winner is flagged with a checkmark in the Winner column. Skips Add/Cast noise and auto-distributed items nobody rolled on (e.g. materia)."));
             ImGui.Spacing();
 
             // log format

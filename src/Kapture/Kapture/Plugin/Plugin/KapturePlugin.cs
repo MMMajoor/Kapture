@@ -35,13 +35,10 @@ namespace Kapture
         private readonly LegacyLoc localization;
         private readonly object locker = new ();
 
-        // Item ids that have been rolled on this instance; used so rolls-only logging can
-        // also keep the winning Obtain for rolled items while dropping non-rolled obtains.
-        private readonly HashSet<uint> rolledItemIds = new ();
-
-        // Each roller's roll value, keyed by item + player + world, so the winning roll can
-        // be attached to the Obtain row (the Obtain event itself carries no roll value).
-        private readonly Dictionary<(uint ItemId, string Player, string World), ushort> rollValues = new ();
+        // Rolls (Need/Greed) buffered per item until the item resolves. The winner isn't
+        // known until the Obtain arrives, so we hold an item's roll rows, then stamp the
+        // winner and write them together. Obtain itself is never written as its own row.
+        private readonly Dictionary<uint, List<LootEvent>> pendingRolls = new ();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="KapturePlugin"/> class.
@@ -300,8 +297,7 @@ namespace Kapture
             this.LootEvents.Clear();
             this.LootRolls.Clear();
             this.LootRollsDisplay?.Clear();
-            this.rolledItemIds.Clear();
-            this.rollValues.Clear();
+            this.pendingRolls.Clear();
             this.IsRolling = false;
         }
 
@@ -483,8 +479,7 @@ namespace Kapture
                     roll.Winner = Loc.Localize("LeftZone", "Left zone");
                 }
 
-                this.rolledItemIds.Clear();
-                this.rollValues.Clear();
+                this.FlushAllPendingRolls();
                 this.IsRolling = false;
             }
             catch (Exception)
@@ -630,31 +625,60 @@ namespace Kapture
             if (this.LootProcessor.IsEnabledEvent(lootEvent) && this.Configuration.LoggingEnabled)
             {
                 var itemId = lootEvent.LootMessage.ItemId;
-
-                // Need/Greed rows carry the roll value; remember them so we can keep (and
-                // annotate) the winning Obtain for rolled items later.
-                var isActualRoll = lootEvent.Roll > 0;
-                if (isActualRoll)
+                switch (lootEvent.LootEventType)
                 {
-                    this.rolledItemIds.Add(itemId);
-                    this.rollValues[(itemId, lootEvent.PlayerName, lootEvent.World)] = lootEvent.Roll;
-                }
+                    case LootEventType.Need:
+                    case LootEventType.Greed:
+                        // Buffer the roll row; we don't know the winner until the Obtain.
+                        if (!this.pendingRolls.TryGetValue(itemId, out var rolls))
+                            this.pendingRolls[itemId] = rolls = new List<LootEvent>();
+                        rolls.Add(lootEvent);
+                        break;
 
-                // The Obtain row has no roll of its own — attach the winner's roll so the
-                // CSV shows what they won it with. (Roll monitor/overlay don't read this.)
-                var isWinnerObtain = lootEvent.LootEventType == LootEventType.Obtain
-                                     && this.rolledItemIds.Contains(itemId);
-                if (isWinnerObtain
-                    && this.rollValues.TryGetValue((itemId, lootEvent.PlayerName, lootEvent.World), out var winningRoll))
-                {
-                    lootEvent.Roll = winningRoll;
-                }
+                    case LootEventType.Obtain:
+                        // Winner known: stamp their roll row and write this item's rolls.
+                        // Obtain is never written as its own row. Items nobody rolled on
+                        // (materia, etc.) have no buffer, so they produce nothing.
+                        this.FlushPendingRolls(itemId, lootEvent.PlayerName, lootEvent.World);
+                        break;
 
-                // Rolls-only mode keeps the roll rows plus the winning Obtain; it drops
-                // Add/Cast noise and Obtains for items nobody rolled on (materia, etc.).
-                var keep = !this.Configuration.LogRollsOnly || isActualRoll || isWinnerObtain;
-                if (keep) this.LootLogger.LogLoot(lootEvent);
+                    case LootEventType.Lost:
+                        // Dropped to floor — no winner; write the roll rows unmarked.
+                        this.FlushPendingRolls(itemId, null, null);
+                        break;
+
+                    default:
+                        // Add / Cast / etc.: only when not restricted to rolled items.
+                        if (!this.Configuration.LogRollsOnly) this.LootLogger.LogLoot(lootEvent);
+                        break;
+                }
             }
+        }
+
+        // Write an item's buffered roll rows, marking the winner (matched by player + world)
+        // if one is given. Called when the item is obtained or lost.
+        private void FlushPendingRolls(uint itemId, string? winnerPlayer, string? winnerWorld)
+        {
+            if (!this.pendingRolls.Remove(itemId, out var rolls)) return;
+            foreach (var roll in rolls)
+            {
+                roll.IsWinner = winnerPlayer != null
+                                && roll.PlayerName == winnerPlayer
+                                && roll.World == winnerWorld;
+                this.LootLogger.LogLoot(roll);
+            }
+        }
+
+        // Write any still-buffered rolls unmarked (e.g. on leaving the instance) so no roll
+        // rows are lost when an item never resolved.
+        private void FlushAllPendingRolls()
+        {
+            foreach (var rolls in this.pendingRolls.Values)
+            {
+                foreach (var roll in rolls) this.LootLogger.LogLoot(roll);
+            }
+
+            this.pendingRolls.Clear();
         }
 
         private bool IsHighEndDuty()

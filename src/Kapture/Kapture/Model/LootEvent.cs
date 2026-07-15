@@ -53,6 +53,12 @@ namespace Kapture
         public ushort Roll { get; set; }
 
         /// <summary>
+        /// Gets or sets a value indicating whether this roller won the item (resolved from
+        /// the Obtain event and stamped onto the winning roll row).
+        /// </summary>
+        public bool IsWinner { get; set; }
+
+        /// <summary>
         /// Gets or sets territory type id.
         /// </summary>
         public uint TerritoryTypeId { get; set; }
@@ -105,6 +111,7 @@ namespace Kapture
                 "PlayerName",
                 "World",
                 "Roll",
+                "Winner",
             });
         }
 
@@ -132,6 +139,7 @@ namespace Kapture
                 this.PlayerName,
                 this.World,
                 this.Roll.ToString(),
+                this.IsWinner ? "✓" : string.Empty,
             });
         }
     }
