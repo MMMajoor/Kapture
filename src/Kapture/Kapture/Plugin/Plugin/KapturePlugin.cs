@@ -485,22 +485,31 @@ namespace Kapture
         {
             // Dalamud API 15 replaced the old (type, timestamp, ref sender, ref message,
             // ref isHandled) delegate with a single IHandleableChatMessage. Kapture only
-            // observes loot lines (it never suppresses messages), so we read Type + Message
-            // and ignore sender/timestamp/handled.
-            var type = chatMessage.LogKind;
+            // observes loot lines (it never suppresses messages), so we read the type and
+            // message and ignore sender/timestamp/handled.
+            //
+            // Older Dalamud delivered the full combined chat-type code (e.g. 2110 for a
+            // local-player obtain-loot line), which is what LootMessageType is keyed on.
+            // API 15 splits that into LogKind (base 7-bit kind) + Source/Target relation,
+            // so reconstruct the combined value: kind | (target << 7) | (source << 11).
+            // Without this, only messages with no source/target bits (System = 57, the
+            // "Add" family) matched, and obtain/roll lines were silently dropped.
             var message = chatMessage.Message;
+            var xivChatType = (ushort)((ushort)chatMessage.LogKind
+                | ((ushort)chatMessage.TargetKind << 7)
+                | ((ushort)chatMessage.SourceKind << 11));
 
             // check if enabled
             if (!this.Configuration.Enabled) return;
 
             // log for debugging
-            if (this.Configuration.DebugLoggingEnabled) PluginLog.Info("[ChatMessage]" + type + ":" + message);
+            if (this.Configuration.DebugLoggingEnabled)
+                PluginLog.Info("[ChatMessage]" + xivChatType + " (" + chatMessage.LogKind + "):" + message);
 
             // combat check
             if (this.Configuration.RestrictInCombat && this.InCombat()) return;
 
             // lookup territory and content
-            var xivChatType = (ushort)type;
             var territoryTypeId = this.GetTerritoryType();
             var contentId = this.GetContentId();
 
@@ -515,7 +524,7 @@ namespace Kapture
             // filter out bad messages
             if (!Enum.IsDefined(typeof(LootMessageType), xivChatType)) return;
             if (!message.Payloads.Any(payload => payload is ItemPayload)) return;
-            var logKind = (LogKind)((uint)type & ~(~0 << 7));
+            var logKind = (LogKind)((uint)xivChatType & ~(~0 << 7));
             if (!Enum.IsDefined(typeof(LogKind), logKind)) return;
 
             // build initial loot message
