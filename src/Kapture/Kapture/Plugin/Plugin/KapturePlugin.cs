@@ -588,17 +588,15 @@ namespace Kapture
             // filter out non-permitted item ids
             if (this.Configuration.RestrictToCustomItems && !this.Configuration.PermittedItems.Contains(lootMessage.ItemId)) return;
 
-            // log for debugging
-            if (this.Configuration.DebugLoggingEnabled) PluginLog.Info("[LootChatMessage]" + lootMessage);
-
             // send to loot processor
             var lootEvent = this.LootProcessor.ProcessLoot(lootMessage);
 
             // kick out if didn't process
             if (lootEvent == null) return;
 
-            // log for debugging
-            if (this.Configuration.DebugLoggingEnabled) PluginLog.Info("[LootEvent]" + lootEvent);
+            // log the classified result (terse; the raw line already logged as [LootMsg])
+            if (this.Configuration.DebugLoggingEnabled)
+                PluginLog.Info($"[LootEvent] {lootEvent.LootEventTypeName} \"{lootEvent.ItemName}\" player={lootEvent.PlayerName} roll={lootEvent.Roll}");
 
             // enrich
             lootEvent.Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
