@@ -867,6 +867,19 @@ namespace Kapture
             ImGuiComponents.HelpMarker(Loc.Localize(
                 "OpenLogFolder_HelpMarker",
                 "open the folder containing the loot log file in your file explorer"));
+
+            // reset log file (Ctrl-guarded so a stray click can't wipe the log)
+            ImGui.Spacing();
+            var ctrlHeld = ImGui.GetIO().KeyCtrl;
+            if (ImGui.Button(Loc.Localize("ResetLogFile", "Reset Log File") + "###Kapture_ResetLogFile_Button") && ctrlHeld)
+            {
+                this.plugin.LootLogger.ResetLog();
+            }
+
+            ImGui.SameLine();
+            ImGui.TextColored(
+                ImGuiColors.DalamudGrey,
+                Loc.Localize("ResetLogFile_Guard", "Hold Ctrl and click — clears the current log file (this cannot be undone)"));
         }
 
         private void OpenLogFolder()

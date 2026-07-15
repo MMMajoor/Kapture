@@ -58,6 +58,20 @@ namespace Kapture
         }
 
         /// <summary>
+        /// Reset the current-format log file: drop any queued events and overwrite the
+        /// file with an empty body (plus the CSV header when in CSV format).
+        /// </summary>
+        public void ResetLog()
+        {
+            this.logEventQueue.Clear();
+            var logFormat = LogFormat.GetLogFormatByCode(this.plugin.Configuration.LogFormat);
+            var fileName = LogFormat.GetFileName(logFormat);
+            this.plugin.PluginDataManager.SaveDataStr(
+                fileName,
+                logFormat == LogFormat.CSV ? LootEvent.GetCsvHeadings() + Environment.NewLine : string.Empty);
+        }
+
+        /// <summary>
         /// Dispose service.
         /// </summary>
         public void Dispose()
