@@ -506,6 +506,20 @@ namespace Kapture
             if (this.Configuration.DebugLoggingEnabled)
                 PluginLog.Info("[ChatMessage]" + xivChatType + " (" + chatMessage.LogKind + "):" + message);
 
+            // Diagnostic: surface loot-bearing lines we DON'T recognize, with their source
+            // relation kind. Runs before any user restriction filter so nothing is hidden.
+            // Used to confirm whether the game sends other-alliance loot (SourceKind =
+            // AllianceMember) to the client — if it does, those codes can be added to
+            // LootMessageType.
+            if (this.Configuration.DebugLoggingEnabled
+                && !Enum.IsDefined(typeof(LootMessageType), xivChatType)
+                && message.Payloads.Any(payload => payload is ItemPayload))
+            {
+                PluginLog.Info(
+                    $"[UnrecognizedLoot] code={xivChatType} kind={chatMessage.LogKind} " +
+                    $"source={chatMessage.SourceKind} target={chatMessage.TargetKind} : {message.TextValue}");
+            }
+
             // combat check
             if (this.Configuration.RestrictInCombat && this.InCombat()) return;
 
