@@ -3,10 +3,10 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using System.Timers;
 
 using CheapLoc;
 using Dalamud.Interface.Colors;
+using Dalamud.Plugin.Services;
 using Kapture.Kapture.Extensions;
 using Newtonsoft.Json;
 
@@ -25,8 +25,8 @@ namespace Kapture
         public readonly ConcurrentQueue<LootEvent> LootEvents = new ();
 
         private readonly IKapturePlugin plugin;
-        private readonly Timer processTimer;
         private bool isProcessing;
+        private long lastProcessTime;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="RollMonitor"/> class.
@@ -35,11 +35,13 @@ namespace Kapture
         public RollMonitor(IKapturePlugin plugin)
         {
             this.plugin = plugin;
-            this.processTimer = new Timer
-            {
-                Interval = this.plugin.Configuration.RollMonitorProcessFrequency, Enabled = true,
-            };
-            this.processTimer.Elapsed += this.ProcessRolls;
+
+            // Run on the framework (main) thread instead of a background timer:
+            // roll processing reads main-thread-only game state (ObjectTable.LocalPlayer,
+            // PartyList, Condition) which throws "Not on main thread!" under Dalamud API 15.
+            // Framework is null under the unit-test harness (no Dalamud services injected).
+            var framework = KapturePlugin.Framework;
+            if (framework is not null) framework.Update += this.OnFrameworkUpdate;
         }
 
         /// <summary>
@@ -47,8 +49,8 @@ namespace Kapture
         /// </summary>
         public void Dispose()
         {
-            this.processTimer.Elapsed -= this.ProcessRolls;
-            this.processTimer.Stop();
+            var framework = KapturePlugin.Framework;
+            if (framework is not null) framework.Update -= this.OnFrameworkUpdate;
         }
 
         /// <summary>
@@ -251,7 +253,17 @@ namespace Kapture
             };
         }
 
-        private void ProcessRolls(object? source, ElapsedEventArgs e)
+        private void OnFrameworkUpdate(IFramework framework)
+        {
+            // Throttle to the configured process frequency (the old System.Timers.Timer
+            // interval); Framework.Update fires every frame.
+            var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            if (now - this.lastProcessTime < this.plugin.Configuration.RollMonitorProcessFrequency) return;
+            this.lastProcessTime = now;
+            this.ProcessRolls();
+        }
+
+        private void ProcessRolls()
         {
             if (this.isProcessing) return;
             if (this.ShouldWait()) return;
