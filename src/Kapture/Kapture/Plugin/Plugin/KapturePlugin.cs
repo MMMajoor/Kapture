@@ -39,6 +39,10 @@ namespace Kapture
         // also keep the winning Obtain for rolled items while dropping non-rolled obtains.
         private readonly HashSet<uint> rolledItemIds = new ();
 
+        // Each roller's roll value, keyed by item + player + world, so the winning roll can
+        // be attached to the Obtain row (the Obtain event itself carries no roll value).
+        private readonly Dictionary<(uint ItemId, string Player, string World), ushort> rollValues = new ();
+
         /// <summary>
         /// Initializes a new instance of the <see cref="KapturePlugin"/> class.
         /// </summary>
@@ -297,6 +301,7 @@ namespace Kapture
             this.LootRolls.Clear();
             this.LootRollsDisplay?.Clear();
             this.rolledItemIds.Clear();
+            this.rollValues.Clear();
             this.IsRolling = false;
         }
 
@@ -479,6 +484,7 @@ namespace Kapture
                 }
 
                 this.rolledItemIds.Clear();
+                this.rollValues.Clear();
                 this.IsRolling = false;
             }
             catch (Exception)
@@ -623,17 +629,30 @@ namespace Kapture
             // output
             if (this.LootProcessor.IsEnabledEvent(lootEvent) && this.Configuration.LoggingEnabled)
             {
-                // Remember which items were actually rolled on, so in rolls-only mode we can
-                // also keep the winning Obtain for those items (and only those).
-                if (lootEvent.Roll > 0) this.rolledItemIds.Add(lootEvent.LootMessage.ItemId);
+                var itemId = lootEvent.LootMessage.ItemId;
 
-                // Rolls-only mode keeps the roll rows (Need/Greed) plus the Obtain that shows
-                // who won a rolled item; it drops Add/Cast noise and Obtains for items nobody
-                // rolled on (auto-distributed materia, etc.).
-                var keep = !this.Configuration.LogRollsOnly
-                           || lootEvent.Roll > 0
-                           || (lootEvent.LootEventType == LootEventType.Obtain
-                               && this.rolledItemIds.Contains(lootEvent.LootMessage.ItemId));
+                // Need/Greed rows carry the roll value; remember them so we can keep (and
+                // annotate) the winning Obtain for rolled items later.
+                var isActualRoll = lootEvent.Roll > 0;
+                if (isActualRoll)
+                {
+                    this.rolledItemIds.Add(itemId);
+                    this.rollValues[(itemId, lootEvent.PlayerName, lootEvent.World)] = lootEvent.Roll;
+                }
+
+                // The Obtain row has no roll of its own — attach the winner's roll so the
+                // CSV shows what they won it with. (Roll monitor/overlay don't read this.)
+                var isWinnerObtain = lootEvent.LootEventType == LootEventType.Obtain
+                                     && this.rolledItemIds.Contains(itemId);
+                if (isWinnerObtain
+                    && this.rollValues.TryGetValue((itemId, lootEvent.PlayerName, lootEvent.World), out var winningRoll))
+                {
+                    lootEvent.Roll = winningRoll;
+                }
+
+                // Rolls-only mode keeps the roll rows plus the winning Obtain; it drops
+                // Add/Cast noise and Obtains for items nobody rolled on (materia, etc.).
+                var keep = !this.Configuration.LogRollsOnly || isActualRoll || isWinnerObtain;
                 if (keep) this.LootLogger.LogLoot(lootEvent);
             }
         }
