@@ -502,22 +502,18 @@ namespace Kapture
             // check if enabled
             if (!this.Configuration.Enabled) return;
 
-            // log for debugging
-            if (this.Configuration.DebugLoggingEnabled)
-                PluginLog.Info("[ChatMessage]" + xivChatType + " (" + chatMessage.LogKind + "):" + message);
-
-            // Diagnostic: surface loot-bearing lines we DON'T recognize, with their source
-            // relation kind. Runs before any user restriction filter so nothing is hidden.
-            // Used to confirm whether the game sends other-alliance loot (SourceKind =
-            // AllianceMember) to the client — if it does, those codes can be added to
-            // LootMessageType.
+            // Debug logging: only item-bearing chat lines (loot), not every chat message.
+            // One line shows the reconstructed code, kind, source/target relation, and
+            // whether we recognize it — enough to diagnose misses (e.g. other-alliance
+            // rolls would show recognized=False with source=AllianceMember).
             if (this.Configuration.DebugLoggingEnabled
-                && !Enum.IsDefined(typeof(LootMessageType), xivChatType)
                 && message.Payloads.Any(payload => payload is ItemPayload))
             {
+                var recognized = Enum.IsDefined(typeof(LootMessageType), xivChatType);
                 PluginLog.Info(
-                    $"[UnrecognizedLoot] code={xivChatType} kind={chatMessage.LogKind} " +
-                    $"source={chatMessage.SourceKind} target={chatMessage.TargetKind} : {message.TextValue}");
+                    $"[LootMsg] code={xivChatType} kind={chatMessage.LogKind} " +
+                    $"source={chatMessage.SourceKind} target={chatMessage.TargetKind} " +
+                    $"recognized={recognized} : {message.TextValue}");
             }
 
             // combat check
