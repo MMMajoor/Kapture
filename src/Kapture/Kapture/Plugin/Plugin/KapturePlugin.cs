@@ -605,7 +605,13 @@ namespace Kapture
             // output
             if (this.LootProcessor.IsEnabledEvent(lootEvent))
             {
-                if (this.Configuration.LoggingEnabled) this.LootLogger.LogLoot(lootEvent);
+                // When LogRollsOnly is set, only persist events with an actual roll value
+                // (Need/Greed) and skip the Add/Cast/Obtain rows that are just noise.
+                if (this.Configuration.LoggingEnabled &&
+                    (!this.Configuration.LogRollsOnly || lootEvent.Roll > 0))
+                {
+                    this.LootLogger.LogLoot(lootEvent);
+                }
             }
         }
 

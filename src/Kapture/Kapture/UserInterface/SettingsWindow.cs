@@ -839,6 +839,22 @@ namespace Kapture
                 "save your loot messages to a file in config (see links)"));
             ImGui.Spacing();
 
+            // log rolls only
+            var logRollsOnly = this.plugin.Configuration.LogRollsOnly;
+            if (ImGui.Checkbox(
+                Loc.Localize("LogRollsOnly", "Log Actual Rolls Only") +
+                "###Kapture_LogRollsOnly_Checkbox",
+                ref logRollsOnly))
+            {
+                this.plugin.Configuration.LogRollsOnly = logRollsOnly;
+                this.plugin.SaveConfig();
+            }
+
+            ImGuiComponents.HelpMarker(Loc.Localize(
+                "LogRollsOnly_HelpMarker",
+                "only write rows with a roll value (Need/Greed rolls); skip Add/Cast/Obtain rows"));
+            ImGui.Spacing();
+
             // log format
             ImGui.Text(Loc.Localize("LogFormat", "Log Format"));
             ImGuiComponents.HelpMarker(Loc.Localize(

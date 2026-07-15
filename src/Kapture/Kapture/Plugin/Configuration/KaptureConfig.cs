@@ -170,6 +170,12 @@ namespace Kapture
         public bool LoggingEnabled { get; set; }
 
         /// <summary>
+        /// Gets or sets a value indicating whether to log only events with an actual roll
+        /// value (roll > 0), i.e. Need/Greed rolls, filtering out Add/Cast/Obtain noise.
+        /// </summary>
+        public bool LogRollsOnly { get; set; } = true;
+
+        /// <summary>
         /// Gets or sets a value indicating whether to restrict to local player events.
         /// </summary>
         public bool SelfOnly { get; set; }
