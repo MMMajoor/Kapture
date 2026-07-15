@@ -596,6 +596,10 @@ namespace Kapture
             lootEvent.TerritoryTypeId = territoryTypeId;
             lootEvent.ContentId = contentId;
 
+            // resolve human-readable names here (main thread; DataManager/Lumina available)
+            lootEvent.TerritoryName = ContentExtension.PlaceName(DataManager, territoryTypeId);
+            lootEvent.ContentName = ContentExtension.ContentName(DataManager, territoryTypeId);
+
             // add to list
             if (this.LootProcessor.IsEnabledEvent(lootEvent)) this.LootEvents.Add(lootEvent);
 

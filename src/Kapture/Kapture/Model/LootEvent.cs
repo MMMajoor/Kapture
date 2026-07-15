@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 
 using Newtonsoft.Json;
 
@@ -62,6 +63,16 @@ namespace Kapture
         public uint ContentId { get; set; }
 
         /// <summary>
+        /// Gets or sets the human-readable territory (place) name.
+        /// </summary>
+        public string TerritoryName { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Gets or sets the human-readable content (duty) name; empty when not in content.
+        /// </summary>
+        public string ContentName { get; set; } = string.Empty;
+
+        /// <summary>
         /// Gets or sets loot event id.
         /// </summary>
         public Guid LootEventId { get; set; }
@@ -85,14 +96,12 @@ namespace Kapture
         {
             return string.Join(",", new List<string>
             {
-                "LootEventId",
                 "Timestamp",
-                "TerritoryTypeId",
-                "ContentId",
-                "LootEventTypeName",
+                "Territory",
+                "Content",
+                "LootEventType",
                 "ItemId",
                 "ItemName",
-                "IsHQ",
                 "PlayerName",
                 "World",
                 "Roll",
@@ -113,14 +122,13 @@ namespace Kapture
         {
             return string.Join(",", new List<string>
             {
-                this.LootEventId.ToString(),
-                this.Timestamp.ToString(),
-                this.TerritoryTypeId.ToString(),
-                this.ContentId.ToString(),
+                DateTimeOffset.FromUnixTimeMilliseconds(this.Timestamp)
+                    .LocalDateTime.ToString("dd/MM/yyyy HH:mm:ss", CultureInfo.InvariantCulture),
+                this.TerritoryName,
+                this.ContentName,
                 this.LootEventTypeName,
                 this.LootMessage.ItemId.ToString(),
                 this.LootMessage.ItemName,
-                this.LootMessage.IsHq.ToString(),
                 this.PlayerName,
                 this.World,
                 this.Roll.ToString(),
