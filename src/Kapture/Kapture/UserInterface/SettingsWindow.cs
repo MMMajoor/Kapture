@@ -254,6 +254,20 @@ namespace Kapture
             }
 
             ImGui.Spacing();
+
+            // loot overlay timeout (minutes)
+            ImGui.Text(Loc.Localize("LootOverlayTimeout", "Entry Timeout (minutes)"));
+            ImGuiComponents.HelpMarker(Loc.Localize(
+                "LootOverlayTimeout_HelpMarker",
+                "how long a loot entry stays in the overlay before it is removed"));
+            var lootOverlayTimeout = this.plugin.Configuration.LootOverlayTimeout / 60000;
+            if (ImGui.SliderInt("###Kapture_LootOverlayTimeout_Slider", ref lootOverlayTimeout, 1, 60))
+            {
+                this.plugin.Configuration.LootOverlayTimeout = lootOverlayTimeout * 60000;
+                this.plugin.SaveConfig();
+            }
+
+            ImGui.Spacing();
         }
 
         private void DrawRolls()

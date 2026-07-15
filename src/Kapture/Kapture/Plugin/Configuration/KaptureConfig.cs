@@ -45,6 +45,12 @@ namespace Kapture
         public bool ShowLootOverlay { get; set; } = true;
 
         /// <summary>
+        /// Gets or sets how long (ms) a loot overlay entry stays before it is aged out.
+        /// Zero disables aging (entries persist until Clear Data).
+        /// </summary>
+        public int LootOverlayTimeout { get; set; } = 300000;
+
+        /// <summary>
         /// Gets or sets a value indicating whether to show roll monitor.
         /// </summary>
         public bool ShowRollMonitorOverlay { get; set; } = true;

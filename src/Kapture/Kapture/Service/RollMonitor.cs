@@ -60,6 +60,7 @@ namespace Kapture
         {
             try
             {
+                this.TrimLootEvents();
                 if (this.plugin.LootRolls.Count == 0) return;
                 var currentTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
                 this.plugin.LootRolls.RemoveAll(roll => !roll.IsWon &&
@@ -284,6 +285,16 @@ namespace Kapture
             if (!this.plugin.Configuration.Enabled) return true;
             if (this.plugin.Configuration.RestrictInCombat && this.plugin.InCombat()) return true;
             return false;
+        }
+
+        private void TrimLootEvents()
+        {
+            var timeout = this.plugin.Configuration.LootOverlayTimeout;
+            if (timeout <= 0) return;
+            var lootEvents = this.plugin.LootEvents;
+            if (lootEvents == null || lootEvents.Count == 0) return;
+            var currentTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            lootEvents.RemoveAll(lootEvent => currentTime - lootEvent.Timestamp > timeout);
         }
 
         private void CreateDisplayList()
