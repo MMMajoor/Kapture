@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Numerics;
 
@@ -853,6 +855,35 @@ namespace Kapture
                 this.plugin.Configuration.LogFormat = pluginLogFormat;
                 this.plugin.SaveConfig();
                 this.plugin.LootLogger.SetLogFormat();
+            }
+
+            // open log folder
+            ImGui.Spacing();
+            if (ImGui.Button(Loc.Localize("OpenLogFolder", "Open Log Folder") + "###Kapture_OpenLogFolder_Button"))
+            {
+                this.OpenLogFolder();
+            }
+
+            ImGuiComponents.HelpMarker(Loc.Localize(
+                "OpenLogFolder_HelpMarker",
+                "open the folder containing the loot log file in your file explorer"));
+        }
+
+        private void OpenLogFolder()
+        {
+            try
+            {
+                var dataPath = Path.GetFullPath(this.plugin.PluginDataManager.DataPath);
+                Directory.CreateDirectory(dataPath);
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = dataPath,
+                    UseShellExecute = true,
+                });
+            }
+            catch (Exception ex)
+            {
+                KapturePlugin.PluginLog.Error(ex, "Failed to open log folder.");
             }
         }
 
