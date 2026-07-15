@@ -910,6 +910,24 @@ namespace Kapture
             ImGui.TextColored(
                 ImGuiColors.DalamudGrey,
                 Loc.Localize("ResetLogFile_Guard", "Hold Ctrl and click — clears the current log file (this cannot be undone)"));
+
+            // debug logging (diagnostic; read live, so it can be toggled anytime)
+            ImGui.Spacing();
+            ImGui.Separator();
+            ImGui.Spacing();
+            var debugLoggingEnabled = this.plugin.Configuration.DebugLoggingEnabled;
+            if (ImGui.Checkbox(
+                Loc.Localize("DebugLoggingEnabled", "Debug Logging (diagnostic)") +
+                "###Kapture_DebugLoggingEnabled_Checkbox",
+                ref debugLoggingEnabled))
+            {
+                this.plugin.Configuration.DebugLoggingEnabled = debugLoggingEnabled;
+                this.plugin.SaveConfig();
+            }
+
+            ImGuiComponents.HelpMarker(Loc.Localize(
+                "DebugLoggingEnabled_HelpMarker",
+                "write chat/loot diagnostics to the Dalamud log (/xllog), including unrecognized loot lines. Takes effect immediately; leave off for normal use."));
         }
 
         private void OpenLogFolder()
