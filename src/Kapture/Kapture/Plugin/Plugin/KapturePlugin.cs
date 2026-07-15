@@ -35,6 +35,10 @@ namespace Kapture
         private readonly LegacyLoc localization;
         private readonly object locker = new ();
 
+        // Item ids that have been rolled on this instance; used so rolls-only logging can
+        // also keep the winning Obtain for rolled items while dropping non-rolled obtains.
+        private readonly HashSet<uint> rolledItemIds = new ();
+
         /// <summary>
         /// Initializes a new instance of the <see cref="KapturePlugin"/> class.
         /// </summary>
@@ -292,6 +296,7 @@ namespace Kapture
             this.LootEvents.Clear();
             this.LootRolls.Clear();
             this.LootRollsDisplay?.Clear();
+            this.rolledItemIds.Clear();
             this.IsRolling = false;
         }
 
@@ -473,6 +478,7 @@ namespace Kapture
                     roll.Winner = Loc.Localize("LeftZone", "Left zone");
                 }
 
+                this.rolledItemIds.Clear();
                 this.IsRolling = false;
             }
             catch (Exception)
@@ -615,15 +621,20 @@ namespace Kapture
             this.RollMonitor.LootEvents.Enqueue(lootEvent);
 
             // output
-            if (this.LootProcessor.IsEnabledEvent(lootEvent))
+            if (this.LootProcessor.IsEnabledEvent(lootEvent) && this.Configuration.LoggingEnabled)
             {
-                // When LogRollsOnly is set, only persist events with an actual roll value
-                // (Need/Greed) and skip the Add/Cast/Obtain rows that are just noise.
-                if (this.Configuration.LoggingEnabled &&
-                    (!this.Configuration.LogRollsOnly || lootEvent.Roll > 0))
-                {
-                    this.LootLogger.LogLoot(lootEvent);
-                }
+                // Remember which items were actually rolled on, so in rolls-only mode we can
+                // also keep the winning Obtain for those items (and only those).
+                if (lootEvent.Roll > 0) this.rolledItemIds.Add(lootEvent.LootMessage.ItemId);
+
+                // Rolls-only mode keeps the roll rows (Need/Greed) plus the Obtain that shows
+                // who won a rolled item; it drops Add/Cast noise and Obtains for items nobody
+                // rolled on (auto-distributed materia, etc.).
+                var keep = !this.Configuration.LogRollsOnly
+                           || lootEvent.Roll > 0
+                           || (lootEvent.LootEventType == LootEventType.Obtain
+                               && this.rolledItemIds.Contains(lootEvent.LootMessage.ItemId));
+                if (keep) this.LootLogger.LogLoot(lootEvent);
             }
         }
 

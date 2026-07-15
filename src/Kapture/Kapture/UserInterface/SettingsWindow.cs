@@ -856,7 +856,7 @@ namespace Kapture
             // log rolls only
             var logRollsOnly = this.plugin.Configuration.LogRollsOnly;
             if (ImGui.Checkbox(
-                Loc.Localize("LogRollsOnly", "Log Actual Rolls Only") +
+                Loc.Localize("LogRollsOnly", "Log Rolled Items Only") +
                 "###Kapture_LogRollsOnly_Checkbox",
                 ref logRollsOnly))
             {
@@ -866,7 +866,7 @@ namespace Kapture
 
             ImGuiComponents.HelpMarker(Loc.Localize(
                 "LogRollsOnly_HelpMarker",
-                "only write rows with a roll value (Need/Greed rolls); skip Add/Cast/Obtain rows"));
+                "only log items that were rolled for: the Need/Greed rolls plus the winning Obtain. Skips Add/Cast noise and auto-distributed items nobody rolled on (e.g. materia)."));
             ImGui.Spacing();
 
             // log format
